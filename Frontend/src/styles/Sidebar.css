@@ -68,12 +68,14 @@ button:hover {
 .fa-trash {
     opacity: 0;
     position: absolute;
-    right: 0;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: opacity 0.2s ease;
 }
 
-.history li:hover{
+.history li:hover .fa-trash {
     opacity: 1;
-    color: white;
 }
 
 .fa-trash:hover{
