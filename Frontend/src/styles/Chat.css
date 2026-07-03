@@ -4,6 +4,7 @@
     flex: 1;
     overflow-y: auto;
     padding: 2rem 1rem;
+    box-sizing: border-box;
 }
 
 .userDiv{
@@ -21,9 +22,10 @@
     background-color: #323232;
     padding: 10px 20px;
     border-radius: 14px;
-    margin-left: 15rem;
     max-width: 500px;
     width: fit-content;
+    text-align: left;
+    overflow-wrap: anywhere;
 
 }
 
@@ -33,4 +35,42 @@
 
 pre{
     white-space: pre-wrap;
+}
+
+.geminiDiv {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+    .chats {
+        padding: 1rem;
+    }
+
+    .userMessage {
+        max-width: 85%;
+    }
+}
+
+
+
+
+.chats {
+  overflow-y: auto;
+}
+
+.chats::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chats::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chats::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 999px;
+}
+
+.chats::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }

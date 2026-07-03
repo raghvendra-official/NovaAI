@@ -1,75 +1,79 @@
 import "./styles/ChatWindow.css";
 import Chat from "./Chat.jsx";
 import { MyContext } from "./MyContext.jsx";
-import { useContext, useState, useEffect } from "react";
-import { RotateLoader } from "react-spinners";
+import { useContext, useState } from "react";
+import { BeatLoader } from "react-spinners";
+
 
 function ChatWindow() {
   const {
     prompt,
     setPrompt,
-    reply,
     setReply,
     currThreadId,
-    setCurrThreadId,
-    prevChats,
     setPrevChats,
     setNewChat,
   } = useContext(MyContext);
   const [loading, setLoading] = useState(false);
-  const [isOpen,setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const getReply = async () => {
+    const message = prompt.trim();
+    if (!message || loading) return;
+
     setLoading(true);
     setNewChat(false);
-    //console.log("message:", prompt, "theadId:", currThreadId);
+    setPrompt("");
+    setReply(null);
+    setPrevChats((prevChats) => [
+      ...prevChats,
+      {
+        role: "user",
+        content: message,
+      },
+    ]);
+
     const options = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        message: prompt,
+        message,
         threadId: currThreadId,
       }),
     };
     try {
       const response = await fetch("https://novaai-ibv5.onrender.com/api/chat", options);
       const res = await response.json();
-      console.log(res);
+      if (!response.ok) {
+        throw new Error(res.error || "Unable to get a response right now.");
+      }
       setReply(res.reply);
+      setPrevChats((prevChats) => [
+        ...prevChats,
+        {
+          role: "assistant",
+          content: res.reply,
+        },
+      ]);
     } catch (error) {
-      console.log(error);
+      setPrevChats((prevChats) => [
+        ...prevChats,
+        {
+          role: "assistant",
+          content: error.message || "Something went wrong. Please try again.",
+        },
+      ]);
+      setReply(error.message || "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  //Append new chat to prevChats
-  useEffect(() => {
-    if (prompt && reply) {
-      setPrevChats((prevChats) => {
-        [
-          ...prevChats,
-          {
-            role: "user",
-            content: prompt,
-          },
-          {
-            role: "assistant",
-            content: reply,
-          },
-        ];
-      });
-    }
-
-    setPrompt("");
-  }, [reply]);
-
-  const handleProfileClick =()=>{
+  const handleProfileClick = () => {
     setIsOpen(!isOpen);
-  }
-
-
+  };
 
   return (
     <div className="chatWindow">
@@ -83,28 +87,41 @@ function ChatWindow() {
           </span>
         </div>
       </div>
-      {
-        isOpen &&
+      {isOpen && (
         <div className="dropDown">
-          <div className="dropDownItem"><i className="fa-solid fa-cloud-arrow-up"></i>&nbsp;Upgrade Plan</div>
-          <div className="dropDownItem"><i className="fa-solid fa-gear"></i>&nbsp;Settings</div>
-          <div className="dropDownItem"><i className="fa-solid fa-arrow-right-from-bracket"></i>&nbsp;Logout</div>
+          <div className="dropDownItem"><i className="fa-solid fa-cloud-arrow-up"></i> Upgrade Plan</div>
+          <div className="dropDownItem"><i className="fa-solid fa-gear"></i> Settings</div>
+          <div className="dropDownItem"><i className="fa-solid fa-arrow-right-from-bracket"></i> Logout</div>
         </div>
-      }
-      <Chat></Chat>
-      <RotateLoader color="#fff" loading={loading}></RotateLoader>
-      <div className="chatInput">
+      )}
+      <Chat />
+
+<div className="chatInput">
+
+  {loading && (
+    <div className="thinking">
+      <span>Nova AI is thinking...</span>
+
+      <BeatLoader
+        color="#3B82F6"
+        size={8}
+      />
+    </div>
+  )}
+
+  <div className="inputBox"></div>
         <div className="inputBox">
           <input
             type="text"
             placeholder="Ask anything"
             value={prompt}
+            disabled={loading}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => (e.key === "Enter" ? getReply() : "")}
           ></input>
-          <div id="submit" onClick={getReply}>
+          <button id="submit" onClick={getReply} disabled={loading || !prompt.trim()} aria-label="Send message">
             <i className="fa-solid fa-paper-plane"></i>
-          </div>
+          </button>
         </div>
         <p className="info">
           Nova AI can make mistakes. Check important info. See Cookie

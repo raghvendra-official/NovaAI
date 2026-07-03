@@ -1,6 +1,6 @@
 import "./styles/Sidebar.css";
 import logo from "./assets/logo.png"; // Adjust the path if needed
-import { useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import { MyContext } from "./MyContext.jsx";
 import { v4 as uuidv4 } from "uuid";
 
@@ -16,10 +16,13 @@ function Sidebar() {
     setPrevChats,
   } = useContext(MyContext);
 
-  const getAllThreads = async () => {
+  const getAllThreads = useCallback(async () => {
     try {
       const response = await fetch("https://novaai-ibv5.onrender.com/api/thread");
       const res = await response.json();
+      if (!response.ok) {
+        throw new Error(res.error || "Failed to fetch threads");
+      }
       const filterData = res.map((thread) => ({
         threadId: thread.threadId,
         title: thread.title,
@@ -28,13 +31,13 @@ function Sidebar() {
       setAllThreads(filterData);
       //threadId, title
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
-  };
+  }, [setAllThreads]);
 
   useEffect(() => {
     getAllThreads();
-  }, [currThreadId]);
+  }, [currThreadId, getAllThreads]);
 
   const createNewChat = () => {
     setNewChat(true);
@@ -52,12 +55,15 @@ function Sidebar() {
         `https://novaai-ibv5.onrender.com/api/thread/${newThreadId}`,
       );
       const res = await response.json();
+      if (!response.ok) {
+        throw new Error(res.error || "Failed to fetch chat");
+      }
       //console.log(res);
       setPrevChats(res);
       setNewChat(false);
       setReply(null);
     } catch (error) {
-      console.log(err);
+      console.error(error);
     }
   };
 
@@ -68,6 +74,9 @@ function Sidebar() {
       });
 
       const res = await response.json();
+      if (!response.ok) {
+        throw new Error(res.error || "Failed to delete thread");
+      }
       console.log(res);
 
       //updated thread re-render
@@ -77,7 +86,7 @@ function Sidebar() {
         createNewChat();
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -94,7 +103,7 @@ function Sidebar() {
       {/* History */}
       <ul className="history">
         {allThreads?.map((thread, idx) => (
-          <li key={idx} onClick={(e) => changeThread(thread.threadId)}
+          <li key={idx} onClick={() => changeThread(thread.threadId)}
           className={thread.threadId === currThreadId? "highlighted": ""}>
             {thread.title}
             <i
